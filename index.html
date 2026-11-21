@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MMA Conversor</title>
+  <meta name="theme-color" content="#111417" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="MMA Conversor" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" href="icons/icon-192.png" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #111417;
+      --card: #1c1f24;
+      --card2: #222529;
+      --border: #2e3238;
+      --accent: #e8a020;
+      --accent2: #c0392b;
+      --text: #f0f0f0;
+      --muted: #6b7280;
+      --green: #22c55e;
+      --blue: #3b82f6;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0 0 60px;
+    }
+
+    /* ── HEADER ─────────────────────────────── */
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 20px 16px;
+      text-align: center;
+    }
+    header h1 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+    header h1 span { color: var(--accent); }
+    header p { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+
+    /* ── TABS ───────────────────────────────── */
+    .tabs {
+      display: flex;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      flex: 1;
+      min-width: 80px;
+      padding: 13px 10px;
+      text-align: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: all 0.2s;
+      background: none;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+      font-family: inherit;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ── SECTIONS ───────────────────────────── */
+    .section { display: none; padding: 18px 16px; max-width: 500px; margin: 0 auto; }
+    .section.active { display: block; }
+
+    /* ── CARD ───────────────────────────────── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 14px;
+    }
+    .card-title {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .card-title span { color: var(--accent); margin-right: 6px; }
+
+    /* ── INPUT FIELDS ───────────────────────── */
+    .field-row { display: flex; gap: 10px; margin-bottom: 10px; }
+    .field { flex: 1; position: relative; }
+    .field input {
+      width: 100%;
+      background: var(--card2);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 48px 13px 14px;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+      -moz-appearance: textfield;
+    }
+    .field input::-webkit-outer-spin-button,
+    .field input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .field input:focus { border-color: var(--accent); }
+    .field input::placeholder { color: #3a3f47; font-weight: 400; }
+    .field .unit {
+      position: absolute; right: 12px; top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.75rem; font-weight: 700;
+      color: var(--muted); pointer-events: none;
+    }
+
+    .divider-arrow {
+      text-align: center; color: var(--muted);
+      font-size: 0.85rem; margin: 4px 0 10px;
+    }
+
+    /* Resultado formateado altura */
+    .fmt-result {
+      background: var(--card2);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 16px;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent);
+      min-height: 52px;
+      margin-top: 10px;
+      text-align: center;
+    }
+    .fmt-result.empty { color: #3a3f47; font-size: 0.85rem; font-weight: 400; }
+
+    /* clear btn */
+    .btn-clear {
+      width: 100%; margin-top: 10px;
+      padding: 8px; border: 1px solid var(--border);
+      border-radius: 8px; background: none;
+      font-family: inherit; font-size: 0.75rem;
+      color: var(--muted); cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-clear:hover { border-color: var(--accent2); color: var(--accent2); }
+
+    /* ── DIVISIONES ─────────────────────────── */
+    .div-table { width: 100%; border-collapse: collapse; }
+    .div-table th {
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--muted);
+      padding: 8px 10px; text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .div-table td {
+      padding: 11px 10px; font-size: 0.88rem;
+      border-bottom: 1px solid #1a1d22;
+      vertical-align: middle;
+    }
+    .div-table tr:last-child td { border-bottom: none; }
+    .div-table tr:hover td { background: #1e2228; }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.65rem; font-weight: 700;
+      padding: 3px 8px; border-radius: 20px;
+      letter-spacing: 0.05em;
+    }
+    .badge-m { background: #1d3557; color: #74b3f7; }
+    .badge-f { background: #3d1a2e; color: #f472b6; }
+
+    .div-name { font-weight: 600; }
+    .div-kg { color: var(--accent); font-weight: 700; }
+    .div-lb { color: var(--muted); font-size: 0.78rem; }
+
+    /* ── CALCULADORA REACH ──────────────────── */
+    .reach-result {
+      background: var(--card2);
+      border-radius: 10px;
+      padding: 16px;
+      margin-top: 14px;
+      border: 1px solid var(--border);
+    }
+    .reach-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
+    .reach-row + .reach-row { border-top: 1px solid var(--border); }
+    .reach-label { font-size: 0.8rem; color: var(--muted); }
+    .reach-val { font-size: 1rem; font-weight: 700; }
+    .positive { color: var(--green); }
+    .negative { color: var(--accent2); }
+    .neutral  { color: var(--text); }
+
+    /* ── RESPONSIVE ─────────────────────────── */
+    @media (max-width: 400px) {
+      .field input { font-size: 1.1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🥊 <span>MMA</span> Conversor</h1>
+  <p>Tu guía rápida para entender el MMA americano</p>
+</header>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="showTab('convertir')">⚖️ Convertir</button>
+  <button class="tab" onclick="showTab('divisiones')">🏆 Divisiones</button>
+  <button class="tab" onclick="showTab('reach')">👊 Reach</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     TAB 1 · CONVERTIR
+══════════════════════════════════════════════════ -->
+<div id="tab-convertir" class="section active">
+
+  <!-- PESO -->
+  <div class="card">
+    <div class="card-title"><span>⚖️</span>Peso</div>
+    <div class="field-row">
+      <div class="field">
+        <input type="number" id="kg" placeholder="0" inputmode="decimal" />
+        <span class="unit">kg</span>
+      </div>
+    </div>
+    <div class="divider-arrow">⇅</div>
+    <div class="field-row">
+      <div class="field">
+        <input type="number" id="lb" placeholder="0" inputmode="decimal" />
+        <span class="unit">lb</span>
+      </div>
+    </div>
+    <button class="btn-clear" onclick="cl('kg','lb')">✕ Limpiar</button>
+  </div>
+
+  <!-- ALTURA -->
+  <div class="card">
+    <div class="card-title"><span>📏</span>Altura</div>
+    <div class="field-row">
+      <div class="field">
+        <input type="number" id="metros" placeholder="0.00" inputmode="decimal" step="0.01"/>
+        <span class="unit">m</span>
+      </div>
+    </div>
+    <div class="divider-arrow">⇅</div>
+    <div class="field-row">
+      <div class="field">
+        <input type="number" id="feet" placeholder="ft" inputmode="numeric" min="0"/>
+        <span class="unit">ft</span>
+      </div>
+      <div class="field">
+        <input type="number" id="inches" placeholder="in" inputmode="decimal" step="0.1" min="0" max="11.9"/>
+        <span class="unit">in</span>
+      </div>
+    </div>
+    <div id="fmt-height" class="fmt-result empty">— Resultado en pies′ pulgadas″ —</div>
+    <button class="btn-clear" onclick="clearHeight()">✕ Limpiar</button>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     TAB 2 · DIVISIONES UFC
+══════════════════════════════════════════════════ -->
+<div id="tab-divisiones" class="section">
+  <div class="card">
+    <div class="card-title"><span>👨</span>Masculino</div>
+    <table class="div-table">
+      <thead>
+        <tr>
+          <th>División</th>
+          <th>Kg máx</th>
+          <th>Lbs máx</th>
+        </tr>
+      </thead>
+      <tbody id="div-men"></tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-title"><span>👩</span>Femenino</div>
+    <table class="div-table">
+      <thead>
+        <tr>
+          <th>División</th>
+          <th>Kg máx</th>
+          <th>Lbs máx</th>
+        </tr>
+      </thead>
+      <tbody id="div-women"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     TAB 3 · REACH / ENVERGADURA
+══════════════════════════════════════════════════ -->
+<div id="tab-reach" class="section">
+  <div class="card">
+    <div class="card-title"><span>👊</span>Comparador de Reach (Envergadura)</div>
+    <p style="font-size:0.75rem;color:var(--muted);margin-bottom:16px;">
+      El reach es la envergadura de brazos. Una ventaja de reach puede ser decisiva en el octágono.
+    </p>
+
+    <!-- Luchador A -->
+    <div style="font-size:0.75rem;font-weight:700;color:var(--blue);margin-bottom:8px;">🔵 Luchador A</div>
+    <div class="field-row">
+      <div class="field">
+        <input type="number" id="reachA_cm" placeholder="reach cm" inputmode="numeric"/>
+        <span class="unit">cm</span>
+      </div>
+      <div class="field">
+        <input type="number" id="reachA_in" placeholder='reach "' inputmode="numeric"/>
+        <span class="unit">in</span>
+      </div>
+    </div>
+
+    <!-- Luchador B -->
+    <div style="font-size:0.75rem;font-weight:700;color:var(--accent2);margin-bottom:8px;margin-top:12px;">🔴 Luchador B</div>
+    <div class="field-row">
+      <div class="field">
+        <input type="number" id="reachB_cm" placeholder="reach cm" inputmode="numeric"/>
+        <span class="unit">cm</span>
+      </div>
+      <div class="field">
+        <input type="number" id="reachB_in" placeholder='reach "' inputmode="numeric"/>
+        <span class="unit">in</span>
+      </div>
+    </div>
+
+    <div id="reach-result" class="reach-result" style="display:none;"></div>
+    <button class="btn-clear" onclick="clearReach()">✕ Limpiar</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>📏</span>¿Qué significa el reach?</div>
+    <div style="font-size:0.8rem;color:var(--muted);line-height:1.7;">
+      <p>• El reach se mide de punta a punta de los dedos con los brazos extendidos.</p>
+      <p>• En el UFC se da siempre en <b style="color:var(--text)">pulgadas (″)</b>.</p>
+      <p>• Un reach superior = mayor distancia de golpeo.</p>
+      <p>• La mayoría de luchadores tienen un reach ≈ a su altura.</p>
+      <p>• Un reach 2–3″ mayor que la altura se considera <b style="color:var(--green)">ventajoso</b>.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════ SCRIPTS ══ -->
+<script>
+
+// ── TABS ──────────────────────────────────────────────────────
+function showTab(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// ── UTILS ─────────────────────────────────────────────────────
+function r(n, d) { return Math.round(n * 10**d) / 10**d; }
+function cl(...ids) { ids.forEach(id => document.getElementById(id).value = ''); }
+
+// ── PESO ──────────────────────────────────────────────────────
+const kgEl = document.getElementById('kg');
+const lbEl = document.getElementById('lb');
+kgEl.addEventListener('input', () => {
+  lbEl.value = kgEl.value === '' ? '' : r(parseFloat(kgEl.value) * 2.20462, 2);
+});
+lbEl.addEventListener('input', () => {
+  kgEl.value = lbEl.value === '' ? '' : r(parseFloat(lbEl.value) / 2.20462, 2);
+});
+
+// ── ALTURA ────────────────────────────────────────────────────
+const metrosEl = document.getElementById('metros');
+const feetEl   = document.getElementById('feet');
+const inchesEl = document.getElementById('inches');
+const fmtEl    = document.getElementById('fmt-height');
+
+function setFmt(ft, inch) {
+  if (ft === '' && inch === '') {
+    fmtEl.className = 'fmt-result empty';
+    fmtEl.textContent = '— Resultado en pies′ pulgadas″ —';
+    return;
+  }
+  const f = ft !== '' ? parseInt(ft) : 0;
+  const i = inch !== '' ? r(parseFloat(inch), 1) : 0;
+  fmtEl.className = 'fmt-result';
+  fmtEl.textContent = `${f}′ ${i}″`;
+}
+metrosEl.addEventListener('input', () => {
+  const v = parseFloat(metrosEl.value);
+  if (metrosEl.value === '' || isNaN(v)) { feetEl.value=''; inchesEl.value=''; setFmt('',''); return; }
+  const ti = v * 39.3701;
+  const ft = Math.floor(ti / 12);
+  const inch = r(ti % 12, 1);
+  feetEl.value = ft; inchesEl.value = inch; setFmt(ft, inch);
+});
+function fi2m() {
+  const ft = parseFloat(feetEl.value)||0, inch = parseFloat(inchesEl.value)||0;
+  if (feetEl.value==='' && inchesEl.value==='') { metrosEl.value=''; setFmt('',''); return; }
+  metrosEl.value = r((ft*12+inch)/39.3701, 3);
+  setFmt(feetEl.value, inchesEl.value);
+}
+feetEl.addEventListener('input', fi2m);
+inchesEl.addEventListener('input', fi2m);
+function clearHeight() { metrosEl.value=''; feetEl.value=''; inchesEl.value=''; setFmt('',''); }
+
+// ── DIVISIONES ────────────────────────────────────────────────
+const divsMen = [
+  { name:'Strawweight',      lb:115, emoji:'🍓' },
+  { name:'Flyweight',        lb:125, emoji:'🪰' },
+  { name:'Bantamweight',     lb:135, emoji:'🐓' },
+  { name:'Featherweight',    lb:145, emoji:'🪶' },
+  { name:'Lightweight',      lb:155, emoji:'⚡' },
+  { name:'Welterweight',     lb:170, emoji:'🔥' },
+  { name:'Middleweight',     lb:185, emoji:'💪' },
+  { name:'Light Heavyweight',lb:205, emoji:'🦁' },
+  { name:'Heavyweight',      lb:265, emoji:'🐘' },
+];
+const divsWomen = [
+  { name:'Strawweight',   lb:115, emoji:'🍓' },
+  { name:'Flyweight',     lb:125, emoji:'🪰' },
+  { name:'Bantamweight',  lb:135, emoji:'🐓' },
+  { name:'Featherweight', lb:145, emoji:'🪶' },
+];
+
+function buildDivTable(data, tbodyId) {
+  const tb = document.getElementById(tbodyId);
+  data.forEach(d => {
+    const kg = r(d.lb * 0.453592, 1);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="div-name">${d.emoji} ${d.name}</span></td>
+      <td><span class="div-kg">${kg} kg</span></td>
+      <td><span class="div-lb">${d.lb} lb</span></td>
+    `;
+    tb.appendChild(tr);
+  });
+}
+buildDivTable(divsMen, 'div-men');
+buildDivTable(divsWomen, 'div-women');
+
+// ── REACH ─────────────────────────────────────────────────────
+['reachA_cm','reachA_in','reachB_cm','reachB_in'].forEach(id => {
+  document.getElementById(id).addEventListener('input', syncReach);
+});
+
+let lockReach = false;
+function syncReach() {
+  if (lockReach) return; lockReach = true;
+  const src = event.target.id;
+  if (src === 'reachA_cm') {
+    const v = parseFloat(document.getElementById('reachA_cm').value);
+    document.getElementById('reachA_in').value = isNaN(v) ? '' : r(v / 2.54, 1);
+  } else if (src === 'reachA_in') {
+    const v = parseFloat(document.getElementById('reachA_in').value);
+    document.getElementById('reachA_cm').value = isNaN(v) ? '' : r(v * 2.54, 1);
+  } else if (src === 'reachB_cm') {
+    const v = parseFloat(document.getElementById('reachB_cm').value);
+    document.getElementById('reachB_in').value = isNaN(v) ? '' : r(v / 2.54, 1);
+  } else if (src === 'reachB_in') {
+    const v = parseFloat(document.getElementById('reachB_in').value);
+    document.getElementById('reachB_cm').value = isNaN(v) ? '' : r(v * 2.54, 1);
+  }
+  lockReach = false;
+  calcReach();
+}
+
+function calcReach() {
+  const aCm = parseFloat(document.getElementById('reachA_cm').value);
+  const bCm = parseFloat(document.getElementById('reachB_cm').value);
+  const res = document.getElementById('reach-result');
+  if (isNaN(aCm) || isNaN(bCm)) { res.style.display='none'; return; }
+  const diff = r(aCm - bCm, 1);
+  const diffIn = r(diff / 2.54, 1);
+  const winner = diff > 0 ? '🔵 Luchador A' : diff < 0 ? '🔴 Luchador B' : 'Empate';
+  const cls = diff > 0 ? 'positive' : diff < 0 ? 'negative' : 'neutral';
+  const absDiff = Math.abs(diff);
+  const absDiffIn = Math.abs(diffIn);
+  const adv = absDiff < 2 ? 'Diferencia mínima' : absDiff < 5 ? 'Ligera ventaja' : absDiff < 10 ? 'Ventaja notable' : '¡Gran ventaja!';
+  res.style.display = 'block';
+  res.innerHTML = `
+    <div class="reach-row">
+      <span class="reach-label">Diferencia</span>
+      <span class="reach-val ${cls}">${diff > 0 ? '+' : ''}${diff} cm (${diff>0?'+':''}${diffIn}″)</span>
+    </div>
+    <div class="reach-row">
+      <span class="reach-label">Ventaja de reach</span>
+      <span class="reach-val ${cls}">${winner}</span>
+    </div>
+    <div class="reach-row">
+      <span class="reach-label">Valoración</span>
+      <span class="reach-val neutral">${adv} (${absDiff} cm / ${absDiffIn}″)</span>
+    </div>
+  `;
+}
+
+function clearReach() {
+  ['reachA_cm','reachA_in','reachB_cm','reachB_in'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('reach-result').style.display = 'none';
+}
+
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>

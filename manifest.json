@@ -1,0 +1,25 @@
+{
+  "name": "MMA Conversor",
+  "short_name": "MMA Conversor",
+  "description": "Conversor de unidades para MMA: kg/lb, altura y reach",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#111417",
+  "theme_color": "#111417",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
